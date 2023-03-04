@@ -1,0 +1,19 @@
+Intended order of operations:
+
+- first crop and resize image using imagemagick
+    e.g. convert input.jpg -resize 1000 x 1000 output.jpg
+
+- set which image you want to use by writing the filename into the `source_image_to_use` file
+
+- run `average_image_down.py`
+
+- run `upscale_reduced.py` to get big image that looks pixelated
+
+- run `make_density_field.py` to make it look like simulation
+
+- run `make_uniform_grid.py` to get image that looks like it has cells
+
+
+average_image_down.py : reduce image to some lower number of pixels by taking averages
+
+tools.py: misc tools that several scripts use
