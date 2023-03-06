@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 # How many pixels do you want as output?
-npixel = 100
+npixel = 128
 
 
 

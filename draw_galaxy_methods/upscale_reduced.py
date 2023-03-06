@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 # How many pixels do you want as output?
-npixel = 2000
+npixel = 2048
 
 
 source_img = tools.get_src_img(addendum="reduced")

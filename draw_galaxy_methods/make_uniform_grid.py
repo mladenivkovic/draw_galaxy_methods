@@ -15,7 +15,7 @@ mpl.rcParams["figure.subplot.left"] = 0.0
 mpl.rcParams["figure.figsize"] = (10,10)
 
 # How many pixels do you want as output?
-npixel = 200
+npixel = 128
 
 source_img = tools.get_src_img(addendum="reduced")
 
@@ -44,12 +44,10 @@ plt.imshow(new_img, interpolation="none", extent=[0., 1., 0., 1.])
 
 dx = 1. / npixel
 for i in range(npixel+1):
-    plt.plot([i*dx, i*dx], [0,1], "k", lw=1)
-    plt.plot([0, 1], [i*dx, i*dx], "k", lw=1)
+    plt.plot([i*dx, i*dx], [0,1], "r", lw=1)
+    plt.plot([0, 1], [i*dx, i*dx], "r", lw=1)
 
-plt.savefig("test.jpg", dpi=200)
-
-#  figname=tools.get_outputfigname("density_field")
-#  plt.savefig(figname, dpi=200)
+figname=tools.get_outputfigname("uniform_grid")
+plt.savefig(figname, dpi=200)
 
 

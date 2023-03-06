@@ -14,7 +14,7 @@ mpl.rcParams["figure.subplot.left"] = 0.0
 mpl.rcParams["figure.figsize"] = (10,10)
 
 # How many pixels do you want as output?
-npixel = 200
+npixel = 128
 
 source_img = tools.get_src_img(addendum="reduced")
 

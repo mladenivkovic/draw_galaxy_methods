@@ -1,19 +1,29 @@
 Intended order of operations:
 
-- first crop and resize image using imagemagick
-    e.g. convert input.jpg -resize 1000 x 1000 output.jpg
+- first crop and resize the image you want to use using imagemagick
+    e.g. convert input.jpg -resize 2000 x 2000 output.jpg
 
-- set which image you want to use by writing the filename into the `source_image_to_use` file
+- set which image you want to use by writing the filename into the `source_image_to_use` file.
+  From the imagemagick example above, that would be 'output.jpg'
 
 - run `average_image_down.py`
+    reduces image to some lower number of pixels by taking averages.
 
 - run `upscale_reduced.py` to get big image that looks pixelated
 
-- run `make_density_field.py` to make it look like simulation
+- run `make_density_field.py` to make it look like simulation.
 
 - run `make_uniform_grid.py` to get image that looks like it has cells
+  on an uniform grid.
+
+- run `make_uniform_grid.py` to get image that looks like it has cells
+  on an uniform grid.
+
+- run `make_amr.py` to get image looking like an AMR grid. You might
+  need to tweak the refinement threshold in the script.
 
 
-average_image_down.py : reduce image to some lower number of pixels by taking averages
 
 tools.py: misc tools that several scripts use
+
+AMR.py: AMR related classes
