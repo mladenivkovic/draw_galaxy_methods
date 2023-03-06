@@ -13,15 +13,14 @@ mpl.rcParams["figure.subplot.top"] = 1.0
 mpl.rcParams["figure.subplot.bottom"] = 0.0
 mpl.rcParams["figure.subplot.right"] = 1.0
 mpl.rcParams["figure.subplot.left"] = 0.0
+mpl.rcParams["figure.figsize"] = (10, 10)
 
-# How many pixels do you want as output?
-# make sure this is a power of two
-npixel = 2048
-dpi = 200
+# how many particles to use
+nparts = 50000
+xp = np.zeros(nparts)
+yp = np.zeros(nparts)
 
-mpl.rcParams["figure.figsize"] = (npixel / dpi, npixel / dpi)
-
-# internal image coordinate extent
+# internal coordinates extent, i.e. boxsize
 extent = 1.
 
 source_img = tools.get_src_img(addendum="reduced")
@@ -30,21 +29,13 @@ source_img = tools.get_src_img(addendum="reduced")
 if source_img.dtype != np.uint8:
     raise ValueError("Can't handle image data with this data type yet")
 
-
 if source_img.shape[0] != source_img.shape[1]:
     raise ValueError("source image must be N x N pixels. You gave me", source_img.shape[0], source_img.shape[1])
 
 ncells = source_img.shape[0]
 
-# the image used for plotting high resolution image that still looks pixelated
-new_img = np.zeros((npixel, npixel))
-
 # the image used to refine grid
 new_img_float = np.zeros((ncells, ncells))
-new_img_amr = np.zeros((ncells, ncells))
-
-if npixel % source_img.shape[0]!= 0 :
-    raise ValueError("No modulo free division source image pixels vs requested pixels. sourge_img.shape=", source_img.shape)
 
 for i in range(source_img.shape[0]):
     for j in range(source_img.shape[1]):
@@ -65,43 +56,76 @@ for i in range(source_img.shape[0]):
 
 
 plt.figure()
-ax = plt.gca()
+ax = plt.subplot(111)
 ax.axis("off")
 
 # Invert image: High values = bright
 new_img_float = np.abs(new_img_float - new_img_float.max())
 
-# plot what you are actually using as the image to generate AMR grid
-#  plt.imshow(new_img_float, interpolation="none", extent=[0., 1., 0., 1.])
-#  plt.colorbar()
+# normalize
+new_img_float = new_img_float / new_img_float.max()
+# help the sampling out to look better by scaling the probabilities
+new_img_float = new_img_float**2
 
 
-# Get the AMR grid now, and draw it directly
-#----------------------------------------------
+def random_positions(rng):
 
-# this threshold is completely arbitrary.
-refine_threshold = 8 * np.mean(new_img_float)
-params = amr_params(ncells, extent, ax, new_img_float, new_img_amr, refine_threshold, verbose=False)
+    x = rng.uniform(0., extent)
+    y = rng.uniform(0., extent)
 
-root = cell(0, 0, params)
-root.draw()
-root.refine()
-print("max level reached:", max_level_reached)
+    return x, y
 
-# check output image
-#  plt.imshow(params.amr_image, interpolation="none", extent=[0., 1., 0., 1.], zorder=0)
 
-# Scale image back up to high resolution, but keep it looking pixelated
-stride = npixel // source_img.shape[0]
+def get_image_value(x, y, image):
 
-for i in range(source_img.shape[0]):
-    for j in range(source_img.shape[1]):
-            new_img[i*stride:(i+1)*stride+1,j*stride:(j+1)*stride+1] = params.amr_image[i,j]
+    dc = extent / ncells
 
-plt.imshow(new_img, interpolation="none", extent=[0., 1., 0., 1.], zorder=0)
+    j = int((extent - x) * ncells)
+    i = int(y * ncells)
+
+    return image[i,j]
+
+
+def sample_image(rng, image):
+    
+    x, y = random_positions(rng)
+    
+    imgval = get_image_value(x, y, image)
+    sample = rng.uniform(0., 1.)
+
+    return sample <= imgval, x, y
+
+    
+
+
+
+rng = np.random.default_rng(seed=666)
+
+n_accepted = 0
+n_tried = 0
+
+for i in range(nparts):
+    if i % 100 == 0 and i > 0:
+        print("{0:6d}/{1:6d}, acceptance rate {2:.3f}".format(i, nparts, n_accepted/n_tried))
+    accepted = False
+    while not accepted:
+        n_tried += 1
+        accepted, x, y = sample_image(rng, new_img_float)
+    n_accepted += 1
+
+    xp[i] = x
+    yp[i] = y
+
+# transform coordinates from imshow() image coordinates to math-like coordinates
+yp = np.abs(yp - extent)
+xp = np.abs(xp - extent)
+
+plt.imshow(np.zeros(new_img_float.shape), interpolation="none", extent=[0., 1., 0., 1.], zorder=0, cmap="inferno")
+
+plt.scatter(xp, yp, s=1, c="b", marker="o", alpha=0.4)
 
 #  plt.show()
 
-figname=tools.get_outputfigname("amr")
-plt.savefig(figname, dpi=dpi)
+figname=tools.get_outputfigname("particles")
+plt.savefig(figname, dpi=200)
 print("Saved", figname)
