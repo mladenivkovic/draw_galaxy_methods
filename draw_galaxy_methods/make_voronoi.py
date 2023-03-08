@@ -8,15 +8,17 @@ from AMR import *
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 import numpy as np
+import scipy
 
 mpl.rcParams["figure.subplot.top"] = 1.0
 mpl.rcParams["figure.subplot.bottom"] = 0.0
 mpl.rcParams["figure.subplot.right"] = 1.0
 mpl.rcParams["figure.subplot.left"] = 0.0
 mpl.rcParams["figure.figsize"] = (10, 10)
+mpl.rcParams["axes.facecolor"] = "black"
 
 # how many particles to use
-nparts = 50000
+nparts = 8000
 xp = np.zeros(nparts)
 yp = np.zeros(nparts)
 
@@ -54,10 +56,6 @@ for i in range(source_img.shape[0]):
         #      else:
         #          new_img_float[i,j] = 64.
 
-
-plt.figure()
-ax = plt.subplot(111)
-ax.axis("off")
 
 # Invert image: High values = bright
 new_img_float = np.abs(new_img_float - new_img_float.max())
@@ -120,12 +118,76 @@ for i in range(nparts):
 yp = np.abs(yp - extent)
 xp = np.abs(xp - extent)
 
-plt.imshow(np.zeros(new_img_float.shape), interpolation="none", extent=[0., 1., 0., 1.], zorder=0, cmap="inferno")
 
-plt.scatter(xp, yp, s=1, c="C1", marker="o", alpha=0.4)
+partdata = np.empty((nparts*9, 2))
+
+# copy data to look periodic
+
+# upper left corner
+i = 0
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:] - extent
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:] + extent
+
+# upper center
+i = 1
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:]
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:] + extent
+
+# upper right corner
+i = 2
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:] + extent
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:] + extent
+
+# middle left
+i = 3
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:] - extent
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:]
+
+# center
+i = 4
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:]
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:]
+
+# middle right
+i = 5
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:] + extent
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:]
+
+# lower left
+i = 6
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:] - extent
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:] - extent
+
+# lower center
+i = 7
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:]
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:] - extent
+
+# lower right
+i = 8
+partdata[i*nparts:(i+1)*nparts, 0] = xp[:] + extent
+partdata[i*nparts:(i+1)*nparts, 1] = yp[:] - extent
+
+
+
+
+
+
+
+plt.figure()
+ax = plt.subplot(111)
+ax.axis("off")
+
+vor = scipy.spatial.Voronoi(partdata, incremental=True, qhull_options="Fi")
+scipy.spatial.voronoi_plot_2d(vor, ax=ax, show_points=False, show_vertices=False, line_width=1, line_colors="r", line_alpha=0.5)
+ax.set_xlim(0, extent)
+ax.set_ylim(0, extent)
+
+plt.imshow(new_img_float, interpolation="none", extent=[0.,extent, 0., extent], cmap="viridis")
+plt.scatter(xp, yp, s=1, c="white", marker="o", alpha=0.5)
 
 #  plt.show()
 
-figname=tools.get_outputfigname("particles")
+figname=tools.get_outputfigname("voronoi")
 plt.savefig(figname, dpi=200)
 print("Saved", figname)
